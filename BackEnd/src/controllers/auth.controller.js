@@ -1,37 +1,40 @@
 import User from "../models/User.js";
+import { ENV } from "../lib/env.js";
 import bcrypt from 'bcrypt';
 import generateToken from '../lib/utils.js'
+import { sendWelcomeEmail } from "../emails/emailhandeler.js";
+import 'dotenv/config'
 
-export const signup = async (req,res) => {
-    const {fullname, email, password} = req.body;
+export const signup = async (req, res) => {
+    const { fullname, email, password } = req.body;
 
     try {
-        if(!fullname || !email || !password){
-            return res.status(400).json({ message : "All fileds are Required"});
+        if (!fullname || !email || !password) {
+            return res.status(400).json({ message: "All fileds are Required" });
         }
-        if(password.length<6){
-            return res.status(400).json({ message : "Password atleast 6 number"});
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password atleast 6 number" });
         }
         //check if emails valid using RageX 
         const emailRagex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRagex.test(email)){
-            return res.status(400).json({ message : "Enter valid email"});
+        if (!emailRagex.test(email)) {
+            return res.status(400).json({ message: "Enter valid email" });
         }
 
 
-        const user = await User.findOne({email});
-        if(user) return res.status(400).json({ message :"Email Already Exists"});
+        const user = await User.findOne({ email });
+        if (user) return res.status(400).json({ message: "Email Already Exists" });
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password,salt);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User ({
+        const newUser = new User({
             fullname,
             email,
             password: hashedPassword
         });
 
-        if(newUser){
+        if (newUser) {
             // before CR:
             // generateToken(newUser._id, res);
             // await newUser.save();
@@ -47,12 +50,18 @@ export const signup = async (req,res) => {
                 email: newUser.email,
                 profilepic: newUser.profilepic
             });
-        }else{
-            res.status(400).json({message: "Inavalid user data"})
+
+            try {
+                await sendWelcomeEmail(savedUser.email, savedUser.fullname, ENV.CLIENT_URL);
+            } catch (error) {
+
+            }
+        } else {
+            res.status(400).json({ message: "Inavalid user data" })
         }
     } catch (error) {
-        console.log("Error in signup controller:",error);
-        res.status(500).json({message: "Internal server error"});
+        console.log("Error in signup controller:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 
 };
