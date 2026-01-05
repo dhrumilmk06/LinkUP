@@ -67,55 +67,65 @@ export const signup = async (req, res) => {
 
 };
 
-export const login = async(req,res) => {
-    const {email,password} = req.body;
+export const login = async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
-        return res.status(400).json({message:"All fields are required"});
+    if (!email || !password) {
+        return res.status(400).json({ message: "All fields are required" });
     }
-    
+
     try {
-        const user =await User.findOne({email});
-        if(!user){
-            return res.status(400).json({message:"Invalid Credentials"});
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid Credentials" });
         }
 
-        const isPasswordCorrect = await bcrypt.compare(password,user.password);
-        if(!isPasswordCorrect){
-            return res.status(400).json({message:"Invalid Credentials"});
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+            return res.status(400).json({ message: "Invalid Credentials" });
         }
 
-        generateToken(user._id,res);
+        generateToken(user._id, res);
         res.status(200).json({
-            _id:user._id,
-            fullname:user.fullname,
-            email:user.email,
-            profilepic:user.profilepic
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            profilepic: user.profilepic
         })
     } catch (error) {
-        console.log("Error in login controller:",error);
-        res.status(500).json({message:"Internal server error"})
+        console.log("Error in login controller:", error);
+        res.status(500).json({ message: "Internal server error" })
     }
 };
 
-export const logout = (_,res) => {
-    res.cookie("jwt", "",{ maxAge: 0}) 
-    res.status(200).json({message:"Logout successful"})
+export const logout = (_, res) => {
+    res.cookie("jwt", "", { maxAge: 0 })
+    res.status(200).json({ message: "Logout successful" })
 };
 
-export const updateProfile = async (req,res) => {
+export const updateProfile = async (req, res) => {
     try {
-      const {profilePic} =  req.body;
-      if(!profilePic) return res.status(400).json({message: "Profile pic is required"});
+        const { profilepic } = req.body;
+        if (!profilepic) return res.status(400).json({ message: "Profile pic is required" });
 
-      const userId= req.user._id;
+        const userId = req.user._id;
+        console.log("updateProfile: Processing for user", userId);
 
-      const uploadResponse = await cloudinary.uploder.uplode(profilePic);
+        try {
+            const uploadResponse = await cloudinary.uploader.upload(profilepic);
+            console.log("updateProfile: Cloudinary upload success", uploadResponse.secure_url);
 
-      const updatedUser  = await User.findByIdAndUpdate(userId,{ profilePic: uploadResponse.secure_url }, {new: true});
-        res.status(200).json(updatedUser);
+            const updatedUser = await User.findByIdAndUpdate(userId, { profilepic: uploadResponse.secure_url }, { new: true });
+            console.log("updateProfile: Database updated", updatedUser);
+
+            res.status(200).json(updatedUser);
+        } catch (uploadError) {
+            console.error("updateProfile: Upload or DB error", uploadError);
+            throw uploadError;
+        }
+
     } catch (error) {
         console.log("Error in update profile:", error);
-        res.status(500).json({message: "Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
-};
+}
