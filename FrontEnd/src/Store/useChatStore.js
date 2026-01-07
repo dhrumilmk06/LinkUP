@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import { useAuthStore } from "./useAuthStore";
+
 
 export const useChatStore = create((set, get) => ({
     allContacts: [],
@@ -57,4 +59,35 @@ export const useChatStore = create((set, get) => ({
         set({isMessageLoading: false});
        }
     },
+
+    sendMessage: async (messageData) => {
+
+        const {selectedUser, messages} = get()
+        const authUser =  useAuthStore.getState()
+
+        const tempId = `temp-${Date.now()}`;
+
+        const optimisticMessage = {
+            _id: tempId,
+            senderId: authUser._id,
+            recevierId: selectedUser._id,
+            text: messageData.text,
+            image: messageData.image,
+            createdAt: new Date().toISOString(),
+            isOptimistic: true, // flag to idantify optimistic message (optional)
+
+        }
+
+        // immdeately update the ui by adding the msg
+        set({message: [...messages, optimisticMessage]});
+
+        try {
+        const res = await axiosInstance.post(`message/send/${selectedUser._id}`,messageData);
+        set({messages: messages.concat(res.data)})
+        } catch (error) {
+            // removing optimistic msg when failure
+            set({message: messages});
+            toast.error(error.response?.data?.message || "Somthiing went wrong");            
+        }
+    }
 }))
