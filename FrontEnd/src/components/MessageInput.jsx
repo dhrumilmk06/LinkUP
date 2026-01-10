@@ -5,53 +5,53 @@ import toast from 'react-hot-toast';
 import { ImageIcon, SendIcon, XIcon } from "lucide-react";
 
 const MessageInput = () => {
-  const {playRandomKeyStrokeSound} = useKeyboardSound();
+  const { playRandomKeyStrokeSound } = useKeyboardSound();
 
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null)
 
   const fileInputRef = useRef(null)
 
-  const {sendMessage, isSoundEnabled} = useChatStore();
+  const { sendMessage, isSoundEnabled } = useChatStore();
 
   const handelSendMessage = (e) => {
-      e.preventDefault();
-      if(!text.trim && !imagePreview) return;
-      if(isSoundEnabled) playRandomKeyStrokeSound();
+    e.preventDefault();
+    if (!text.trim() && !imagePreview) return;
+    if (isSoundEnabled) playRandomKeyStrokeSound();
 
-      sendMessage({
-        text: text.trim(),
-        image: imagePreview
-      });
+    sendMessage({
+      text: text.trim(),
+      image: imagePreview
+    });
 
-      setText("");
-      setImagePreview("");
+    setText("");
+    setImagePreview("");
 
-      if(fileInputRef.current) fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if(!file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
-    const reader  =new FileReader();
+    const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImagePreview(null);
-    if(fileInputRef.current) fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
 
   return (
     <div className="p-4 border-t border-slate-700/50">
 
-       {imagePreview && (
+      {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3 flex items-center">
           <div className="relative">
             <img
@@ -71,7 +71,7 @@ const MessageInput = () => {
       )}
 
       <form onSubmit={handelSendMessage} className="max-w-3xl mx-auto flex space-x-4" >
-        <input  
+        <input
           type="text"
           value={text}
           onChange={(e) => {
@@ -80,9 +80,9 @@ const MessageInput = () => {
           }}
           className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
           placeholder="Type your message..."
-         />
+        />
 
-         <input
+        <input
           type="file"
           accept="image/*"
           ref={fileInputRef}
@@ -90,12 +90,11 @@ const MessageInput = () => {
           className="hidden"
         />
 
-         <button
+        <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
-            imagePreview ? "text-cyan-500" : ""
-          }`}
+          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${imagePreview ? "text-cyan-500" : ""
+            }`}
         >
           <ImageIcon className="w-5 h-5" />
         </button>
@@ -110,7 +109,7 @@ const MessageInput = () => {
 
       </form>
 
-      
+
 
     </div>
   )
