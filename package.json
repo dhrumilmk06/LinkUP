@@ -1,8 +1,8 @@
 {
-  "name": "linkup-deploy",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "npm install --prefix FrontEnd && npm run build --prefix FrontEnd && npm install --prefix BackEnd",
-    "start": "npm start --prefix BackEnd"
-  }
+    "name": "linkup-deploy",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "npm install --include=dev --prefix FrontEnd && npm run build --prefix FrontEnd && npm install --prefix BackEnd",
+        "start": "npm start --prefix BackEnd"
+    }
 }
