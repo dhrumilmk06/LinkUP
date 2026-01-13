@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
-import { useChatStore } from '../Store/useChatStore'
-import { useAuthStore } from '../Store/useAuthStore'
+import { useChatStore } from '../store/useChatStore.js'
+import { useAuthStore } from '../store/useAuthStore.js'
 import ChatHeader from './ChatHeader'
 import NoChatHistoryPlaceholder from './NoChatHistoryPlaceholder'
 import MessagesLoadingSkeleton from './MessagesLoadingSkeleton'
@@ -14,20 +14,20 @@ const ChatContainer = () => {
 
   useEffect(() => {
     // if (selectedUser && selectedUser._id) {
-      getMessagesByUserId(selectedUser._id);
-      subscribeToMessages()
+    getMessagesByUserId(selectedUser._id);
+    subscribeToMessages()
 
-      //cleanup function
-      return () => unsubscribeFromMessages()
-    
+    //cleanup function
+    return () => unsubscribeFromMessages()
+
   }, [selectedUser, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
-    if(messageEndRef.current){
-      messageEndRef.current.scrollIntoView({ behavior : "smooth"});
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages])
-  
+
 
 
   return (

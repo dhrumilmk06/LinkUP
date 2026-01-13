@@ -1,21 +1,21 @@
 import React, { useState } from 'react'
-import { useAuthStore } from '../Store/useAuthStore'
+import { useAuthStore } from '../store/useAuthStore.js'
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import { MessageCircleIcon, LockIcon, MailIcon, UserIcon, LoaderIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({email: "", password: ""})
-  
-    const login = useAuthStore((state) => state.login);
-    const isLoggingUp = useAuthStore((state) => state.isLoggingUp);
-  
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      login(formData);
-    };
+  const [formData, setFormData] = useState({ email: "", password: "" })
 
-   return (
+  const login = useAuthStore((state) => state.login);
+  const isLoggingUp = useAuthStore((state) => state.isLoggingUp);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    login(formData);
+  };
+
+  return (
     <div className="w-full flex items-center justify-center p-4 bg-slate-900">
       <div className="relative w-full max-w-6xl md:h-[800px] h-[650px]">
         <BorderAnimatedContainer>

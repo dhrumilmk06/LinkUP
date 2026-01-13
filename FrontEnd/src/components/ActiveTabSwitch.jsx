@@ -1,5 +1,5 @@
 import React from 'react'
-import { useChatStore } from "../Store/useChatStore";
+import { useChatStore } from "../store/useChatStore";
 
 const ActiveTabSwitch = () => {
   const { activeTab, setActiveTab } = useChatStore();

@@ -1,4 +1,4 @@
-import { useChatStore } from "../Store/useChatStore";
+import { useChatStore } from "../store/useChatStore";
 
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import ProfileHeader from "../components/ProfileHeader";
@@ -30,7 +30,7 @@ const ChatPage = () => {
       </BorderAnimatedContainer>
     </div>
   );
-  
+
 }
 
 export default ChatPage
