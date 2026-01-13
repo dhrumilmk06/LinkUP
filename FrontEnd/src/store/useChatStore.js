@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
-import { useAuthStore } from "./useAuthStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 
 export const useChatStore = create((set, get) => ({
@@ -64,7 +64,10 @@ export const useChatStore = create((set, get) => ({
         const { selectedUser, messages } = get();
         const { authUser } = useAuthStore.getState();
 
-        if (!selectedUser || !authUser) return;
+        if (!selectedUser || !authUser) {
+            console.error("SendMessage Error: Missing user or authUser", { selectedUser, authUser });
+            return;
+        }
 
         const tempId = `temp-${Date.now()}`;
 
