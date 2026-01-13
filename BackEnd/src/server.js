@@ -7,6 +7,11 @@ import authRoutes from '../src/routes/auth.route.js';
 import messageRoutes from '../src/routes/message.route.js';
 import { connectDB } from "./lib/db.js";
 import { app, server } from "./lib/socket.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -23,6 +28,14 @@ app.use(cors({
 
 app.use('/api/auth', authRoutes);
 app.use('/api/message', messageRoutes);
+
+if (ENV.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "../../FrontEnd/dist")));
+
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../../FrontEnd/dist/index.html"));
+    });
+}
 
 
 server.listen(PORT, () => {
