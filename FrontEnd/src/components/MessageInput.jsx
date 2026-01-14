@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import useKeyboardSound from '../hooks/useKeyboardSound.js'
 import { useChatStore } from '../store/useChatStore.js';
 import toast from 'react-hot-toast';
@@ -12,20 +12,33 @@ const MessageInput = () => {
 
   const fileInputRef = useRef(null)
 
-  const { sendMessage, isSoundEnabled } = useChatStore();
+  const {
+    sendMessage,
+    editMessage,
+    editingMessage,
+    setEditingMessage,
+    isSoundEnabled,
+  } = useChatStore();
+
+  // set new text for update
+  useEffect(() => {
+    if (editingMessage) setText(editingMessage.text);
+  }, [editingMessage]);
 
   const handelSendMessage = (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
     if (isSoundEnabled) playRandomKeyStrokeSound();
 
-    sendMessage({
-      text: text.trim(),
-      image: imagePreview
-    });
+    if (editingMessage) {
+      editMessage(editingMessage._id, text);
+      setEditingMessage(null);
+    } else {
+      sendMessage({ text: text.trim(), image: imagePreview });
+    }
 
     setText("");
-    setImagePreview("");
+    setImagePreview(null);
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };

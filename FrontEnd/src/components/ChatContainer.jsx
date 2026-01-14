@@ -5,10 +5,12 @@ import ChatHeader from './ChatHeader'
 import NoChatHistoryPlaceholder from './NoChatHistoryPlaceholder'
 import MessagesLoadingSkeleton from './MessagesLoadingSkeleton'
 import MessageInput from './MessageInput';
+import { Edit, Trash } from "lucide-react";
 
 const ChatContainer = () => {
 
-  const { selectedUser, messages, getMessagesByUserId, isMessageLoading, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
+  const { selectedUser, messages, getMessagesByUserId, isMessageLoading, subscribeToMessages, unsubscribeFromMessages, deleteMessage,
+    setEditingMessage, } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null)
 
@@ -18,9 +20,18 @@ const ChatContainer = () => {
     subscribeToMessages()
 
     //cleanup function
-    return () => unsubscribeFromMessages()
-
-  }, [selectedUser, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
+    return () => {
+      // clean up
+      unsubscribeFromMessages();
+      setEditingMessage(null); // reset editingMessage when leaving chat
+    };
+  }, [
+    selectedUser,
+    getMessagesByUserId,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    setEditingMessage,
+  ]);
 
   useEffect(() => {
     if (messageEndRef.current) {
@@ -42,19 +53,48 @@ const ChatContainer = () => {
                 className={`chat ${String(msg.senderId) === String(authUser?._id) ? "chat-end" : "chat-start"}`}>
 
                 <div
-                  className={`chat-bubble relative ${String(msg.senderId) === String(authUser?._id) ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-200"}`}>
+                  className={`chat-bubble relative group ${String(msg.senderId) === String(authUser?._id) ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-200"}`}>
 
                   {msg.image && (
-                    <img src={msg.image} alt="Shared" className="rounded-lg h-48 object-cover" />
+                    <img
+                      src={msg.image}
+                      alt="Shared"
+                      className="rounded-lg h-48 object-cover"
+                    />
+                  )}
+                  {msg.text && (
+                    <div>
+                      <p className="mt-2">{msg.text}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-x-1.5">
+                    <p className="text-xs mt-1 opacity-75">
+                      {new Date(msg.createdAt).toLocaleTimeString(undefined, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <div>
+                      {msg.edited && (
+                        <span className="text-xs text-gray-100 opacity-75">
+                          (edited)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {msg.senderId === authUser._id && (
+                    <div className="absolute -bottom-5 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 text-gray-400">
+                      <button onClick={() => deleteMessage(msg._id)}>
+                        <Trash size={15} />
+                      </button>
+                      <button onClick={() => setEditingMessage(msg)}>
+                        <Edit size={15} />
+                      </button>
+                    </div>
                   )}
 
-                  {msg.text && <p className="mt-2">{msg.text}</p>}
-                  <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
-                    {new Date(msg.createdAt).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+
                 </div>
               </div>
             ))}
