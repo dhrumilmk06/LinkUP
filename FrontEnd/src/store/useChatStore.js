@@ -14,6 +14,11 @@ export const useChatStore = create((set, get) => ({
     isMessageLoading: false,
     isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
 
+    // edit message state
+    editingMessage: null,
+    setEditingMessage: (message) => set({ editingMessage: message }),
+
+
     toggleSound: () => {
         localStorage.setItem("isSoundEnabled", !get().isSoundEnabled);
         set({ isSoundEnabled: !get().isSoundEnabled })
@@ -28,7 +33,7 @@ export const useChatStore = create((set, get) => ({
             const res = await axiosInstance.get('/message/contacts')
             set({ allContacts: res.data })
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Something went wrong");
         } finally {
             set({ isUserLoading: false })
         }
@@ -40,7 +45,7 @@ export const useChatStore = create((set, get) => ({
             const res = await axiosInstance.get('/message/chats')
             set({ chats: res.data })
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Something went wrong");
         } finally {
             set({ isUserLoading: false })
         }
@@ -60,23 +65,32 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
-    sendMessage: async (messageData) => {
-        const { selectedUser, messages } = get();
+    sendMessage: async ({ text, image }) => {
+        const { selectedUser, messages, editingMessage } = get();
         const { authUser } = useAuthStore.getState();
+        const tempId = Date.now();
 
         if (!selectedUser || !authUser) {
             console.error("SendMessage Error: Missing user or authUser", { selectedUser, authUser });
             return;
         }
 
-        const tempId = `temp-${Date.now()}`;
+        if (!selectedUser) return;
+        if (!text?.trim() && !image) return;
+
+        // prevent send message on editing message
+        if (editingMessage) {
+            get().editMessage(editingMessage._id, text);
+            set({ editingMessage: null });
+            return;
+        }
 
         const optimisticMessage = {
             _id: tempId,
             senderId: authUser._id,
             receiverId: selectedUser._id,
-            text: messageData.text,
-            image: messageData.image,
+            text: text,
+            image: image,
             createdAt: new Date().toISOString(),
             isOptimistic: true,
         };
@@ -84,7 +98,7 @@ export const useChatStore = create((set, get) => ({
         set({ messages: [...messages, optimisticMessage] });
 
         try {
-            const res = await axiosInstance.post(`/message/send/${selectedUser._id}`, messageData);
+            const res = await axiosInstance.post(`/message/send/${selectedUser._id}`, { text, image });
             set((state) => ({
                 messages: state.messages.map((msg) => (msg._id === tempId ? res.data : msg)),
             }));
@@ -93,6 +107,48 @@ export const useChatStore = create((set, get) => ({
                 messages: state.messages.filter((msg) => msg._id !== tempId),
             }));
             toast.error(error.response?.data?.message || "Something went wrong");
+        }
+    },
+
+    deleteMessage: async (messageId) => {
+        const { messages } = get();
+        // Optimistic update
+        set({ messages: messages.filter((msg) => msg._id !== messageId) });
+
+        try {
+            await axiosInstance.delete(`/message/delete/${messageId}`);
+            toast.success("Message deleted successfully");
+        } catch (error) {
+            toast.error("Failed to delete message");
+            // Revert changes if needed, or re-fetch messages
+            set({ messages });
+        }
+    },
+
+    editMessage: async (messageId, newText) => {
+        const { messages } = get();
+        // Optimistic update
+        const originalMessages = [...messages];
+        set({
+            messages: messages.map((msg) =>
+                msg._id === messageId ? { ...msg, text: newText, edited: true } : msg
+            ),
+        });
+
+        try {
+            const res = await axiosInstance.put(`/message/update/${messageId}`, {
+                text: newText,
+            });
+            // Update with actual server response
+            set({
+                messages: get().messages.map((msg) =>
+                    msg._id === messageId ? res.data : msg
+                ),
+            });
+            toast.success("Message updated successfully");
+        } catch (error) {
+            toast.error("Failed to update message");
+            set({ messages: originalMessages });
         }
     },
 
@@ -117,11 +173,33 @@ export const useChatStore = create((set, get) => ({
                 notificationSound.play().catch((e) => console.log("Audio play failed:", e));
             }
 
-        })
+        });
+
+        socket.on("messageDeleted", ({ messageId }) => {
+            set({ messages: get().messages.filter((msg) => msg._id !== messageId) });
+        });
+
+        socket.on("messageUpdated", (updatedMessage) => {
+            const { selectedUser } = get();
+            // Check if the update belongs to current chat conversation
+            const isRelatedMessage =
+                updatedMessage.senderId === selectedUser._id ||
+                updatedMessage.receiverId === selectedUser._id;
+
+            if (isRelatedMessage) {
+                set({
+                    messages: get().messages.map((msg) =>
+                        msg._id === updatedMessage._id ? updatedMessage : msg
+                    ),
+                });
+            }
+        });
     },
 
     unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
         socket.off("newMessage");
+        socket.off("messageDeleted");
+        socket.off("messageUpdated");
     },
 }))
