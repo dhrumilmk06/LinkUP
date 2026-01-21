@@ -18,7 +18,12 @@ const MessageInput = () => {
     editingMessage,
     setEditingMessage,
     isSoundEnabled,
+    emitTyping,
+    emitStopTyping,
+    selectedUser
   } = useChatStore();
+
+  const typingTimeoutRef = useRef(null);
 
   // set new text for update
   useEffect(() => {
@@ -37,10 +42,29 @@ const MessageInput = () => {
       sendMessage({ text: text.trim(), image: imagePreview });
     }
 
+    // Stop typing immediately when sent
+    emitStopTyping(selectedUser._id);
+    clearTimeout(typingTimeoutRef.current);
+
     setText("");
     setImagePreview(null);
 
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleTyping = (e) => {
+    setText(e.target.value);
+    isSoundEnabled && playRandomKeyStrokeSound();
+
+    if (selectedUser) {
+      emitTyping(selectedUser._id);
+
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+      typingTimeoutRef.current = setTimeout(() => {
+        emitStopTyping(selectedUser._id);
+      }, 2500);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -87,10 +111,7 @@ const MessageInput = () => {
         <input
           type="text"
           value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            isSoundEnabled && playRandomKeyStrokeSound();
-          }}
+          onChange={handleTyping}
           className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
           placeholder="Type your message..."
         />

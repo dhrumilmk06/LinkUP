@@ -10,19 +10,23 @@ import { Edit, Trash } from "lucide-react";
 const ChatContainer = () => {
 
   const { selectedUser, messages, getMessagesByUserId, isMessageLoading, subscribeToMessages, unsubscribeFromMessages, deleteMessage,
-    setEditingMessage, } = useChatStore();
+    setEditingMessage, subscribeToTypingEvents, unsubscribeFromTypingEvents, typingUsers } = useChatStore();
+
+  const isTyping = typingUsers.includes(selectedUser?._id);
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null)
 
   useEffect(() => {
     // if (selectedUser && selectedUser._id) {
     getMessagesByUserId(selectedUser._id);
-    subscribeToMessages()
+    subscribeToMessages();
+    subscribeToTypingEvents();
 
     //cleanup function
     return () => {
       // clean up
       unsubscribeFromMessages();
+      unsubscribeFromTypingEvents();
       setEditingMessage(null); // reset editingMessage when leaving chat
     };
   }, [
@@ -30,6 +34,8 @@ const ChatContainer = () => {
     getMessagesByUserId,
     subscribeToMessages,
     unsubscribeFromMessages,
+    subscribeToTypingEvents,
+    unsubscribeFromTypingEvents,
     setEditingMessage,
   ]);
 
@@ -98,6 +104,13 @@ const ChatContainer = () => {
                 </div>
               </div>
             ))}
+            {isTyping && (
+              <div className="chat chat-start">
+                <div className="chat-bubble bg-slate-800 text-slate-200">
+                  <span className="loading loading-dots loading-xs"></span>
+                </div>
+              </div>
+            )}
             <div ref={messageEndRef} />
           </div>
         ) : isMessageLoading ? (

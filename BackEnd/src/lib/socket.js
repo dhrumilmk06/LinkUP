@@ -1,7 +1,7 @@
-import {Server} from "socket.io";
+import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import {ENV} from "../lib/env.js";
+import { ENV } from "../lib/env.js";
 import socketAuthMiddleware from "../middlewares/socket.auth.middleware.js";
 
 const app = express();
@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-    cors : {
+    cors: {
         origin: ENV.CLIENT_URL,
         credentials: true
     },
@@ -18,12 +18,12 @@ const io = new Server(server, {
 // apply authentication middleware  to all  socket connections
 io.use(socketAuthMiddleware);
 
-export function getReceiverSocketId(receiverId){
+export function getReceiverSocketId(receiverId) {
     return userSocketMap[receiverId];
 }
 
 // this is for storig online users
-const userSocketMap ={}; //{ userId: socketId }
+const userSocketMap = {}; //{ userId: socketId }
 
 io.on("connection", (socket) => {
     console.log("A user connected", socket.user.fullname);
@@ -34,6 +34,20 @@ io.on("connection", (socket) => {
     // io.emit() is used to send events to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+    socket.on("typing", ({ recipientId }) => {
+        const receiverSocketId = getReceiverSocketId(recipientId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("typing", { senderId: userId });
+        }
+    });
+
+    socket.on("stopTyping", ({ recipientId }) => {
+        const receiverSocketId = getReceiverSocketId(recipientId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("stopTyping", { senderId: userId });
+        }
+    });
+
     // with socket.on we listen for events from clients
     socket.on('disconnect', () => {
         console.log("A user disconnected", socket.user.fullname);
@@ -42,4 +56,4 @@ io.on("connection", (socket) => {
     })
 })
 
-export {io, server, app};
+export { io, server, app };
