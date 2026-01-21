@@ -13,6 +13,7 @@ export const useChatStore = create((set, get) => ({
     isUserLoading: false,
     isMessageLoading: false,
     isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
+    typingUsers: [],
 
     // edit message state
     editingMessage: null,
@@ -202,4 +203,35 @@ export const useChatStore = create((set, get) => ({
         socket.off("messageDeleted");
         socket.off("messageUpdated");
     },
+    subscribeToTypingEvents: () => {
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
+
+        socket.on("typing", ({ senderId }) => {
+            set((state) => {
+                if (!state.typingUsers.includes(senderId)) {
+                    return { typingUsers: [...state.typingUsers, senderId] };
+                }
+                return state;
+            });
+        });
+
+        socket.on("stopTyping", ({ senderId }) => {
+            set((state) => ({ typingUsers: state.typingUsers.filter(id => id !== senderId) }));
+        });
+    },
+    unsubscribeFromTypingEvents: () => {
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
+        socket.off("typing");
+        socket.off("stopTyping");
+    },
+    emitTyping: (recipientId) => {
+        const socket = useAuthStore.getState().socket;
+        if (socket) socket.emit("typing", { recipientId });
+    },
+    emitStopTyping: (recipientId) => {
+        const socket = useAuthStore.getState().socket;
+        if (socket) socket.emit("stopTyping", { recipientId });
+    }
 }))

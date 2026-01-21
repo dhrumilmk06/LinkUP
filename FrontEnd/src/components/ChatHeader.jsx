@@ -5,9 +5,10 @@ import { useAuthStore } from "../store/useAuthStore.js";
 
 const ChatHeader = () => {
 
-    const { selectedUser, setSelectedUser } = useChatStore();
+    const { selectedUser, setSelectedUser, typingUsers } = useChatStore();
     const { onlineUsers } = useAuthStore();
     const isOnline = onlineUsers.includes(selectedUser._id);
+    const isTyping = typingUsers.includes(selectedUser._id);
 
     useEffect(() => {
 
@@ -35,7 +36,13 @@ const ChatHeader = () => {
 
                 <div>
                     <h3 className="text-slate-200 font-medium">{selectedUser?.fullname}</h3>
-                    <p className="text-slate-400 text-sm">{isOnline ? "Online" : "Offline"}</p>
+                    <p className="text-slate-400 text-sm">
+                        {isTyping ? (
+                            <span className="text-cyan-500 animate-pulse">Typing...</span>
+                        ) : (
+                            isOnline ? "Online" : "Offline"
+                        )}
+                    </p>
                 </div>
             </div>
 
