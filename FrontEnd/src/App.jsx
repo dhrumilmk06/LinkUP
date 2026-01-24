@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom';
-import ChatPage from './pages/ChatPage.jsx'
-import SignUpPage from './pages/SignUpPage.jsx'
-import LoginPage from './pages/LoginPage.jsx'
 import { useAuthStore } from './store/useAuthStore';
 import PageLoader from './components/PageLoader.jsx';
 import { Toaster } from 'react-hot-toast'
+
+const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
+const SignUpPage = lazy(() => import('./pages/SignUpPage.jsx'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -18,6 +19,7 @@ const App = () => {
 
 
   if (isCheckingAuth) return <PageLoader />;
+
   return (
     <div className="min-h-screen bg-slate-900 relative flex items-center justify-center p-4 overflow-hidden">
 
@@ -26,13 +28,13 @@ const App = () => {
       <div className="absolute top-0 -left-4 size-96 bg-pink-500 opacity-20 blur-[100px]" />
       <div className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px]" />
 
-
-
-      <Routes>
-        <Route path='/' element={authUser ? <ChatPage /> : <Navigate to={"/login"} />} />
-        <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to={"/"} />} />
-        <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to={"/"} />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path='/' element={authUser ? <ChatPage /> : <Navigate to={"/login"} />} />
+          <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to={"/"} />} />
+          <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to={"/"} />} />
+        </Routes>
+      </Suspense>
 
       <Toaster />
     </div>

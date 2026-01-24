@@ -8,7 +8,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" })
 
   const login = useAuthStore((state) => state.login);
-  const isLoggingUp = useAuthStore((state) => state.isLoggingUp);
+  const isLoggingIn = useAuthStore((state) => state.isLoggingIn);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const LoginPage = () => {
         <BorderAnimatedContainer>
           <div className="w-full flex flex-col md:flex-row">
             {/* FORM CLOUMN - LEFT SIDE */}
-            <div className="md:w-1/2 p-8 flex items-center justify-center md:border-r border-slate-600/30">
+            <div className="w-full md:w-1/2 p-8 flex items-center justify-center md:border-r border-slate-600/30">
               <div className="w-full max-w-md">
                 {/* HEADING TEXT */}
                 <div className="text-center mb-8">
@@ -66,8 +66,8 @@ const LoginPage = () => {
                   </div>
 
                   {/* SUBMIT BUTTON */}
-                  <button className="auth-btn" type="submit" disabled={isLoggingUp}>
-                    {isLoggingUp ? (
+                  <button className="auth-btn" type="submit" disabled={isLoggingIn}>
+                    {isLoggingIn ? (
                       <LoaderIcon className="w-full h-5 animate-spin text-center" />
                     ) : (
                       "Sign in"
