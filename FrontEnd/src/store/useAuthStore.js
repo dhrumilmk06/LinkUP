@@ -9,7 +9,7 @@ export const useAuthStore = create((set, get) => ({
     authUser: null,
     isCheckingAuth: true,
     isSigningUp: false,
-    isLoggingUp: false,
+    isLoggingIn: false,
     socket: null,
     onlineUsers: [],
 
@@ -45,7 +45,7 @@ export const useAuthStore = create((set, get) => ({
     },
 
     login: async (data) => {
-        set({ isLoggingUp: true })
+        set({ isLoggingIn: true })
         try {
             const res = await axiosInstance.post('/auth/login', data);
             set({ authUser: res.data });
@@ -58,12 +58,12 @@ export const useAuthStore = create((set, get) => ({
             const message = error?.response?.data?.message || error?.message || 'Login failed';
             toast.error(message);
         } finally {
-            set({ isLoggingUp: false })
+            set({ isLoggingIn: false })
         }
     },
 
     logout: async (data) => {
-        set({ isLoggingUp: true })
+        set({ isLoggingIn: true })
         try {
             await axiosInstance.post('/auth/logout');
             set({ authUser: null });
@@ -76,7 +76,7 @@ export const useAuthStore = create((set, get) => ({
             const message = error?.response?.data?.message || error?.message || 'Logout failed';
             toast.error(message);
         } finally {
-            set({ isLoggingUp: false })
+            set({ isLoggingIn: false })
         }
     },
 

@@ -28,7 +28,7 @@ export const useChatStore = create((set, get) => ({
     setActiveTab: (tab) => set({ activeTab: tab }),
     setSelectedUser: (selectedUser) => set({ selectedUser }),
 
-    getAllConatacts: async () => {
+    getAllContacts: async () => {
         set({ isUserLoading: true });
         try {
             const res = await axiosInstance.get('/message/contacts')
